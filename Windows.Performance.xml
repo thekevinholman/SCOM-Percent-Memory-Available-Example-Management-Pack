@@ -1,0 +1,394 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack ContentReadable="true" SchemaVersion="2.0" OriginalSchemaVersion="1.1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+	<Manifest>
+		<Identity>
+			<ID>Windows.Performance</ID>
+			<Version>1.0.0.20</Version>
+		</Identity>
+		<Name>Windows.Performance</Name>
+		<References>
+			<Reference Alias="SC">
+				<ID>Microsoft.SystemCenter.Library</ID>
+				<Version>7.0.8437.0</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="Windows">
+				<ID>Microsoft.Windows.Library</ID>
+				<Version>7.5.8501.0</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="Health">
+				<ID>System.Health.Library</ID>
+				<Version>7.0.8437.0</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="System">
+				<ID>System.Library</ID>
+				<Version>7.5.8501.0</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="Perf">
+				<ID>System.Performance.Library</ID>
+				<Version>7.0.8437.0</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+			<Reference Alias="SCDW">
+				<ID>Microsoft.SystemCenter.DataWarehouse.Library</ID>
+				<Version>7.2.11719.0</Version>
+				<PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+			</Reference>
+		</References>
+	</Manifest>
+	<TypeDefinitions>
+	  <ModuleTypes>
+		  <DataSourceModuleType ID="Windows.Performance.PercentMemoryAvailable.DS" Accessibility="Internal" Batching="false">
+			<Configuration>
+			  <xsd:element minOccurs="1" type="xsd:string" name="ComputerName" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+			  <xsd:element minOccurs="1" type="xsd:integer" name="IntervalSeconds" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+			  <xsd:element minOccurs="1" type="xsd:double" name="ScaleBy" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />	
+			</Configuration>
+			<OverrideableParameters>
+			  <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+			</OverrideableParameters>
+			<ModuleImplementation Isolation="Any">
+			  <Composite>
+				<MemberModules>
+				  <DataSource ID="DS" TypeID="Perf!System.Performance.OptimizedDataProvider">
+					<ComputerName>$Config/ComputerName$</ComputerName>
+					<CounterName>Available KBytes</CounterName>
+					<ObjectName>Memory</ObjectName>
+					<InstanceName />
+					<AllInstances>false</AllInstances>
+					<Frequency>$Config/IntervalSeconds$</Frequency>
+					<ScaleBy>$Config/ScaleBy$</ScaleBy>
+					<Tolerance>0</Tolerance>
+					<ToleranceType>Absolute</ToleranceType>
+					<MaximumSampleSeparation>1</MaximumSampleSeparation>
+				  </DataSource>	
+				  <ConditionDetection ID="ComputePercentage" TypeID="System!System.Computation">
+					<NumericValue>
+						<Product>
+							<NumericValue>
+								<XPathQuery Type="Double">Value</XPathQuery>
+							</NumericValue>
+							<NumericValue>
+								<Value>100</Value>
+							</NumericValue>
+						</Product>
+					</NumericValue>
+				  </ConditionDetection>				  
+				  <ConditionDetection ID="CDPerfMapper" TypeID="Perf!System.Performance.DataGenericMapper">
+					  <ObjectName>Memory</ObjectName>
+					  <CounterName>Percent Memory Available</CounterName>
+					  <InstanceName></InstanceName>
+					  <Value>$Data/Value$</Value>
+				  </ConditionDetection>
+				</MemberModules>
+				<Composition>
+				  <Node ID="CDPerfMapper">
+					  <Node ID="ComputePercentage">
+						<Node ID="DS" />
+					  </Node>
+				  </Node>			  
+				</Composition>
+			  </Composite>
+			</ModuleImplementation>
+			<OutputType>Perf!System.Performance.Data</OutputType>
+		  </DataSourceModuleType>		
+      </ModuleTypes>
+		<MonitorTypes>
+			<UnitMonitorType ID="Windows.Performance.PercentMemoryAvailable.MonitorType" Accessibility="Public">
+				<MonitorTypeStates>
+					<MonitorTypeState ID="Unhealthy" NoDetection="false" />
+					<MonitorTypeState ID="Healthy" NoDetection="false" />
+				</MonitorTypeStates>
+				<Configuration>
+					<xsd:element name="ComputerName" type="xsd:string" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+					<xsd:element name="Frequency" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+					<xsd:element name="ScaleBy" type="xsd:integer" minOccurs="0" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+					<xsd:element name="TimeoutSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+					<xsd:element name="Threshold" type="xsd:integer" minOccurs="1" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+					<xsd:element name="MatchCount" type="xsd:integer" minOccurs="1" maxOccurs="1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+				</Configuration>
+				<OverrideableParameters>
+					<OverrideableParameter ID="Frequency" Selector="$Config/Frequency$" ParameterType="int" />
+					<OverrideableParameter ID="Threshold" Selector="$Config/Threshold$" ParameterType="double" />
+					<OverrideableParameter ID="MatchCount" Selector="$Config/MatchCount$" ParameterType="int" />
+				</OverrideableParameters>
+				<MonitorImplementation>
+					<MemberModules>
+						<DataSource ID="DSPerf" TypeID="Perf!System.Performance.DataProvider">
+							<ComputerName>$Config/ComputerName$</ComputerName>
+							<CounterName>Available KBytes</CounterName>
+							<ObjectName>Memory</ObjectName>
+							<InstanceName></InstanceName>
+							<AllInstances>false</AllInstances>
+							<Frequency>$Config/Frequency$</Frequency>
+							<ScaleBy>$Config/ScaleBy$</ScaleBy>
+						</DataSource>
+						<ProbeAction ID="ProbePS" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagTriggerOnlyProbe">
+							<ScriptName>Windows.Performance.PercentMemoryAvailable.MonitorType.ps1</ScriptName>
+							<ScriptBody>
+#=================================================================================
+#  Generic monitoring script to input perf data and gather additional propertybags for alert enrichment
+#
+#  Kevin Holman
+#  v1.1
+#=================================================================================
+param ($PercentMemoryAvailable, $Threshold, $TotalMemoryKB, $MatchCount)
+
+
+# Manual Testing section
+#=================================================================================
+# $ComputerName = "computername.domain.com"
+# $PercentMemoryAvailable = "30.6062995011643"
+# $Threshold = "35"
+# $TotalMemoryKB = "268392172"
+# $MatchCount = "2"
+#=================================================================================
+
+
+# Constants section
+#=================================================================================
+# Assign script name variable for use in event logging.  
+# ScriptName should be the same as the ID of the module that the script is contained in
+$ScriptName = "Windows.Performance.PercentMemoryAvailable.Monitor.ps1"
+$EventID = "6262"
+#=================================================================================
+
+
+# Starting Script section - All scripts get this
+#=================================================================================
+# Gather the start time of the script
+$StartTime = Get-Date
+#Set variable to be used in logging events
+$whoami = whoami
+# Load MOMScript API
+$momapi = New-Object -comObject MOM.ScriptAPI
+# Load SCOM PropertyBag function
+$bag = $momapi.CreatePropertyBag()
+#=================================================================================
+
+
+# Begin MAIN script section
+#=================================================================================
+# Start Main section of script to gather additional data for alert description
+# This example will gather the processes that are consuming the most Memory
+
+# Set variables to empty
+[string]$TopProcessString = "Memory(MB), ProcessName `r`n"
+
+#Get process data for propertybag
+[array]$ProcessPBArr = Get-Process | select Name,PrivateMemorySize64 | Sort PrivateMemorySize64 -Descending | Select -first 7
+
+FOREACH ($TopProc in $ProcessPBArr)
+{
+  [string]$ProcName = $TopProc.Name
+
+  #Change Bytes to Megabyes
+  [int]$ProcMegabytes = [Math]::round(($TopProc.PrivateMemorySize64/1000000),0)
+    
+  #We need to define TopProcessString as a string and add text to it with a carriage return in a FOR loop because we cannot output an array to a propertybag or SCOM will choke
+  $TopProcessString += "$ProcMegabytes, $ProcName `r`n"
+}
+
+# Change KB memory to MB memory
+$TotalMemoryMB = [Math]::round(($TotalMemoryKB/1000),0)
+
+# Round the Free Memory Percent value
+$PercentMemoryAvailable = [Math]::round(($PercentMemoryAvailable),1)
+
+
+# Output data in propertybags to be able to add them to the alert description
+$bag.AddValue("PercentMemoryAvailable",$PercentMemoryAvailable)
+$bag.AddValue("Threshold",$Threshold)
+$bag.AddValue("TotalMemoryMB",$TotalMemoryMB)
+$bag.AddValue("MatchCount",$MatchCount)
+$bag.AddValue("ProcessesByMemory",$TopProcessString)
+
+# Output all bags
+$bag
+#=================================================================================
+# End MAIN script section
+
+
+# End of script section
+#=================================================================================
+#Log an event for script ending and total execution time.
+$EndTime = Get-Date
+$ScriptTime = ($EndTime - $StartTime).TotalSeconds
+$momapi.LogScriptEvent($ScriptName,$EventID,2,"`nAvailable Memory is too low. `nScript Completed. `nRuntime: ($ScriptTime) seconds. `nRunning as ($whoami). `nPercentMemoryAvailable: ($PercentMemoryAvailable). `nFree Memory Threshold Percent: ($Threshold). `nTotalMemoryMB: ($TotalMemoryMB). `nMatchCount ($MatchCount). `nTop Processes: `n$TopProcessString")
+#=================================================================================
+# End of script						
+							</ScriptBody>
+							<Parameters>
+								<!-- We have to pass all these parameters into the script in order to be able to output them as propertybags into the monitor state output context -->
+								<Parameter>
+									<Name>PercentMemoryAvailable</Name>
+									<Value>$Data/Value$</Value>
+								</Parameter>
+								<Parameter>
+									<Name>Threshold</Name>
+									<Value>$Config/Threshold$</Value>
+								</Parameter>
+								<Parameter>
+									<Name>TotalMemoryKB</Name>
+									<Value>$Config/ScaleBy$</Value>
+								</Parameter>
+								<Parameter>
+									<Name>MatchCount</Name>
+									<Value>$Config/MatchCount$</Value>
+								</Parameter>
+							</Parameters>
+							<TimeoutSeconds>$Config/TimeoutSeconds$</TimeoutSeconds>
+						</ProbeAction>
+						<ConditionDetection ID="ComputePercentage" TypeID="System!System.Computation">
+							<NumericValue>
+								<Product>
+									<NumericValue>
+										<XPathQuery Type="Double">Value</XPathQuery>
+									</NumericValue>
+									<NumericValue>
+										<Value>100</Value>
+									</NumericValue>
+								</Product>
+							</NumericValue>
+						</ConditionDetection>
+						<ConditionDetection ID="CDFreeMemoryLow" TypeID="System!System.ExpressionFilter">
+							<Expression>
+								<SimpleExpression>
+									<ValueExpression>
+										<XPathQuery Type="Double">Value</XPathQuery>
+									</ValueExpression>
+									<Operator>LessEqual</Operator>
+									<ValueExpression>
+										<Value Type="Double">$Config/Threshold$</Value>
+									</ValueExpression>
+								</SimpleExpression>
+							</Expression>
+							<SuppressionSettings>
+								<MatchCount>$Config/MatchCount$</MatchCount>
+							</SuppressionSettings>
+						</ConditionDetection>
+						<ConditionDetection ID="CDFreeMemoryGood" TypeID="System!System.ExpressionFilter">
+							<Expression>
+								<SimpleExpression>
+									<ValueExpression>
+										<XPathQuery Type="Double">Value</XPathQuery>
+									</ValueExpression>
+									<Operator>Greater</Operator>
+									<ValueExpression>
+										<Value Type="Double">$Config/Threshold$</Value>
+									</ValueExpression>
+								</SimpleExpression>
+							</Expression>
+						</ConditionDetection>
+					</MemberModules>
+					<RegularDetections>
+						<RegularDetection MonitorTypeStateID="Unhealthy">
+							<Node ID="ProbePS">
+								<Node ID="CDFreeMemoryLow">
+									<Node ID="ComputePercentage">
+										<Node ID="DSPerf" />
+									</Node>
+								</Node>
+							</Node>
+						</RegularDetection>
+						<RegularDetection MonitorTypeStateID="Healthy">
+							<Node ID="CDFreeMemoryGood">
+								<Node ID="ComputePercentage">
+									<Node ID="DSPerf" />
+								</Node>
+							</Node>
+						</RegularDetection>
+					</RegularDetections>
+				</MonitorImplementation>
+			</UnitMonitorType>
+		</MonitorTypes>
+	</TypeDefinitions>
+	<Monitoring>
+		<Rules>
+			<Rule ID="Windows.Performance.PercentMemoryAvailable.PerformanceCollection.Rule" Enabled="true" Target="Windows!Microsoft.Windows.Server.OperatingSystem" ConfirmDelivery="false" Remotable="true" Priority="Normal" DiscardLevel="100">
+				<Category>PerformanceCollection</Category>
+				<DataSources>
+					<DataSource ID="DS" TypeID="Windows.Performance.PercentMemoryAvailable.DS">
+						<ComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/NetworkName$</ComputerName>
+						<IntervalSeconds>900</IntervalSeconds>
+						<ScaleBy>$Target/Property[Type="Windows!Microsoft.Windows.OperatingSystem"]/PhysicalMemory$</ScaleBy>
+					</DataSource>
+				</DataSources>
+				<WriteActions>
+					<WriteAction ID="WriteToDB" TypeID="SC!Microsoft.SystemCenter.CollectPerformanceData" />
+					<WriteAction ID="WriteToDW" TypeID="SCDW!Microsoft.SystemCenter.DataWarehouse.PublishPerformanceData" />
+				</WriteActions>
+			</Rule>
+		</Rules>
+		<Monitors>
+			<UnitMonitor ID="Windows.Performance.PercentMemoryAvailable.Monitor" Accessibility="Public" Enabled="true" Target="Windows!Microsoft.Windows.Server.OperatingSystem" ParentMonitorID="Health!System.Health.PerformanceState" Remotable="true" Priority="Normal" TypeID="Windows.Performance.PercentMemoryAvailable.MonitorType" ConfirmDelivery="false">
+				<Category>PerformanceHealth</Category>
+				<AlertSettings AlertMessage="Windows.Performance.PercentMemoryAvailable.Monitor.AlertMessage">
+					<AlertOnState>Warning</AlertOnState>
+					<AutoResolve>true</AutoResolve>
+					<AlertPriority>Normal</AlertPriority>
+					<AlertSeverity>MatchMonitorHealth</AlertSeverity>
+					<AlertParameters>
+						<AlertParameter1>$Data/Context/Property[@Name='PercentMemoryAvailable']$</AlertParameter1>
+						<AlertParameter2>$Data/Context/Property[@Name='Threshold']$</AlertParameter2>
+						<AlertParameter3>$Data/Context/Property[@Name='TotalMemoryMB']$</AlertParameter3>
+						<AlertParameter4>$Data/Context/Property[@Name='MatchCount']$</AlertParameter4>
+						<AlertParameter5>$Data/Context/Property[@Name='ProcessesByMemory']$</AlertParameter5>
+					</AlertParameters>
+				</AlertSettings>
+				<OperationalStates>
+					<OperationalState ID="Unhealthy" MonitorTypeStateID="Unhealthy" HealthState="Warning" />
+					<OperationalState ID="Healthy" MonitorTypeStateID="Healthy" HealthState="Success" />
+				</OperationalStates>
+				<Configuration>
+					<ComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</ComputerName>
+					<Frequency>60</Frequency>
+					<ScaleBy>$Target/Property[Type="Windows!Microsoft.Windows.OperatingSystem"]/PhysicalMemory$</ScaleBy>
+					<TimeoutSeconds>120</TimeoutSeconds>
+					<Threshold>10</Threshold>
+					<MatchCount>15</MatchCount>
+				</Configuration>
+			</UnitMonitor>
+		</Monitors>
+	</Monitoring>
+	<Presentation>
+		<StringResources>
+			<StringResource ID="Windows.Performance.PercentMemoryAvailable.Monitor.AlertMessage" />
+		</StringResources>
+	</Presentation>
+	<LanguagePacks>
+		<LanguagePack ID="ENU" IsDefault="true">
+			<DisplayStrings>
+				<DisplayString ElementID="Windows.Performance">
+					<Name>Windows Performance </Name>
+					<Description></Description>
+				</DisplayString>
+				<DisplayString ElementID="Windows.Performance.PercentMemoryAvailable.Monitor">
+					<Name>Percent Memory Available Monitor</Name>
+				</DisplayString>
+				<DisplayString ElementID="Windows.Performance.PercentMemoryAvailable.Monitor.AlertMessage">
+					<Name>Percent Memory Available Is Too Low</Name>
+					<Description>
+Percent Memory Available: {0}
+Threshold: {1}
+Total Memory (MB): {2}
+Match Count: {3}
+Processes consuming the most Memory:
+{4}</Description>
+				</DisplayString>
+				<DisplayString ElementID="Windows.Performance.PercentMemoryAvailable.Monitor" SubElementID="Healthy">
+					<Name>Healthy</Name>
+				</DisplayString>
+				<DisplayString ElementID="Windows.Performance.PercentMemoryAvailable.Monitor" SubElementID="Unhealthy">
+					<Name>Unhealthy</Name>
+				</DisplayString>
+				<DisplayString ElementID="Windows.Performance.PercentMemoryAvailable.PerformanceCollection.Rule">
+					<Name>Windows Performance Available KBytes Performance Collection Rule</Name>
+				</DisplayString>
+			</DisplayStrings>
+		</LanguagePack>
+	</LanguagePacks>
+</ManagementPack>
