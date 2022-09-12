@@ -3,7 +3,7 @@
 	<Manifest>
 		<Identity>
 			<ID>Windows.Performance</ID>
-			<Version>1.0.0.20</Version>
+			<Version>1.0.0.21</Version>
 		</Identity>
 		<Name>Windows.Performance</Name>
 		<References>
@@ -345,11 +345,11 @@ $momapi.LogScriptEvent($ScriptName,$EventID,2,"`nAvailable Memory is too low. `n
 				</OperationalStates>
 				<Configuration>
 					<ComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</ComputerName>
-					<Frequency>60</Frequency>
+					<Frequency>300</Frequency>
 					<ScaleBy>$Target/Property[Type="Windows!Microsoft.Windows.OperatingSystem"]/PhysicalMemory$</ScaleBy>
 					<TimeoutSeconds>120</TimeoutSeconds>
 					<Threshold>10</Threshold>
-					<MatchCount>15</MatchCount>
+					<MatchCount>3</MatchCount>
 				</Configuration>
 			</UnitMonitor>
 		</Monitors>
@@ -386,7 +386,7 @@ Processes consuming the most Memory:
 					<Name>Unhealthy</Name>
 				</DisplayString>
 				<DisplayString ElementID="Windows.Performance.PercentMemoryAvailable.PerformanceCollection.Rule">
-					<Name>Windows Performance Available KBytes Performance Collection Rule</Name>
+					<Name>Percent Memory Available Performance Collection Rule</Name>
 				</DisplayString>
 			</DisplayStrings>
 		</LanguagePack>
