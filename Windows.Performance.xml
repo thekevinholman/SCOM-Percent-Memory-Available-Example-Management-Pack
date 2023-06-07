@@ -137,6 +137,10 @@
 #=================================================================================
 param ($PercentMemoryAvailable, $Threshold, $TotalMemoryKB, $MatchCount)
 
+								
+# Get the currently configured memory assigned (in case of dynamic memory settings)
+$TotalMemoryKB = (Get-WmiObject Win32_ComputerSystem).TotalPhysicalMemory / 1024
+
 
 # Manual Testing section
 #=================================================================================
